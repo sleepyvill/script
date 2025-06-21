@@ -1,4 +1,4 @@
--- Join https://discord.gg/Dx6F8EJ9sD for full support
+-- Join https://discord.gg/Dx6F8EJ9sD for full support and future updates + free scripts
 
 local libURL = "https://raw.githubusercontent.com/sleepyvill/script/refs/heads/main/lib.lua" -- dont ever change this or the line below else it will break and this is for auto update
 local GAG = loadstring(game:HttpGet(libURL))()
