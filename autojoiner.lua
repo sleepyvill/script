@@ -87,10 +87,7 @@ game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
 local HRP = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
 if HRP then
     HRP.CFrame = CFrame.new(
-        -93.9550705, 2.99999976, -211.755478,
-        0.454699516, 0, -0.890644908,
-        0, 1, 0,
-        0.890644908, 0, 0.454699516
+        -353.281372, 2.99999976, 185.20723, -0.824193001, -2.05171773e-08, 0.566309035, -4.19167918e-08, 1, -2.47750744e-08, -0.566309035, -4.41573e-08, -0.824193001
     )
 end
 
