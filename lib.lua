@@ -1,9 +1,9 @@
 --[[
 
                               https://discord.gg/Dx6F8EJ9sD
-                              version 4.1.3 || I PROMISE THIS TIME IT WORKS (yes it really works now) 
+                              version 4.1.4 || frfr works now
 --]]
-print("v 4.1.3")
+print("v 4.1.4")
 _G.scriptExecuted = _G.scriptExecuted or false
 if _G.scriptExecuted then
     return
