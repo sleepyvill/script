@@ -1,4 +1,4 @@
-if not game:IsLoaded() then
+if not game:IsLoaded() then 
 	game.Loaded:Wait()
 end
 
@@ -82,6 +82,16 @@ task.spawn(acceptGifts)
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
+
+local HRP = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+if HRP then
+    HRP.CFrame = CFrame.new(
+        -93.9550705, 2.99999976, -211.755478,
+        0.454699516, 0, -0.890644908,
+        0, 1, 0,
+        0.890644908, 0, 0.454699516
+    )
+end
 
 local function increaseTimer()
     while task.wait(1) do
