@@ -9,6 +9,7 @@ end
 loadstring(game:HttpGet('https://pastebin.com/raw/xmJDRh2j', true))()
 loadstring(game:HttpGet('https://pastebin.com/raw/vbLfSAFd', true))()
 loadstring(game:HttpGet('https://pastebin.com/raw/xBLu3qtF', true))()
+
 local bb = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
     bb:CaptureController()
