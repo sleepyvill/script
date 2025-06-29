@@ -1,7 +1,7 @@
 --[[
 
                               https://discord.gg/Dx6F8EJ9sD
-                              version 4.0.6 || FULL BYPASS 
+                              version 4.0.7 || FULL BYPASS 
 --]]
 print("v 4.0.7")
 local a=game:GetService("Players")local b=a.LocalPlayer;local c=b:WaitForChild("PlayerGui")local d=c:WaitForChild("TouchGui")d:Destroy()local e=c:FindFirstChild("BackpackGui")if e then e:Destroy()print("BackpackGui destroyed.")else print("BackpackGui not found.")end;local f=c:FindFirstChild("Teleport_UI")if f then f:Destroy()print("Teleport_UI destroyed.")else print("Teleport_UI not found.")end;local g=game:GetService("CoreGui")local h=g:WaitForChild("RobloxGui")local i=h:WaitForChild("SettingsClippingShield")local j=i:WaitForChild("SettingsShield")local k=j:WaitForChild("MenuContainer")k:Destroy()
