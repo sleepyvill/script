@@ -87,6 +87,8 @@ if HRP then
     )
 end
 
+wait(0.5)
+
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
