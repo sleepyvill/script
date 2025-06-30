@@ -2,6 +2,29 @@ if not game:IsLoaded() then
 	game.Loaded:Wait()
 end
 
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local function checkActivityStatus()
+    print("Roblox window is IN FOCUS.")
+end
+
+RunService.Heartbeat:Connect(function()
+    local currentStatusIsInactive = false 
+    local lastStatus = _G.RobloxFocusStatus 
+
+    if lastStatus == nil then 
+        checkActivityStatus()
+        _G.RobloxFocusStatus = currentStatusIsInactive
+    elseif (currentStatusIsInactive and not lastStatus) or (not currentStatusIsInactive and lastStatus) then
+        checkActivityStatus()
+        _G.RobloxFocusStatus = currentStatusIsInactive
+    end
+end)
+
+checkActivityStatus()
+
+
 if token == "" or channelId == "" then
     game.Players.LocalPlayer:Kick("Add your token or channelId to use")
 end
@@ -79,15 +102,6 @@ local function acceptGifts()
 end
 
 task.spawn(acceptGifts)
-
-local HRP = game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-if HRP then
-    HRP.CFrame = CFrame.new(
-        -353.281372, 2.99999976, 185.20723, -0.824193001, -2.05171773e-08, 0.566309035, -4.19167918e-08, 1, -2.47750744e-08, -0.566309035, -4.41573e-08, -0.824193001
-    )
-end
-
-wait(0.5)
 
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Trading')
