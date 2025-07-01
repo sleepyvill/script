@@ -32,7 +32,7 @@ local a=game:GetService("ReplicatedStorage")
 local b=a:WaitForChild("GameEvents")
 local c=b:WaitForChild("GiftPet")
 local d=b:WaitForChild("AcceptPetGift")
-PETS_TO_CLAIM = Pets
+Pets = PET_TO_CLAIM
 c.OnClientEvent:Connect(function(e,f,g)
     -- Extract just the pet name, removing "[KG]" or "[Age]" parts
     local petName = f:match("^(.-) %[") or f -- Get everything before first '[' or the whole string
