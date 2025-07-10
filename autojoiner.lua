@@ -4,8 +4,6 @@ end
 
 warn("✅ SCRIPT LOADED")
 
-_G.Pets = { 'Stegosaurus', 'Golden Lab', 'Raptor', 'Triceratops' }
-
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
