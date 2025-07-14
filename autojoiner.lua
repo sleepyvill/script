@@ -1,6 +1,4 @@
 -- Define a main namespace table to hold global-like configurations
-local Config = {}
-
 
 Config.MinPetKg = 1 -- minimum pet kilogram to accept
 
